@@ -1,9 +1,12 @@
 import {SubmitHandler, useForm} from "react-hook-form";
-import {useState} from "react";
+import React, {useState} from "react";
 import {UserCredentials} from "../../types/UserCredentials";
 
 import Cookies from 'js-cookie';
 import axios from "axios";
+import {TextField} from "../common/TextField";
+import {Link, useNavigate} from "react-router-dom";
+import {UserLoginResponse} from "../../types/UserLoginResponse";
 
 export const LoginForm = () => {
   const {
@@ -13,28 +16,43 @@ export const LoginForm = () => {
     formState: {errors}
   } = useForm<UserCredentials>();
 
+  const navigate = useNavigate();
+
   const [login, setLogin] = useState<UserCredentials | undefined>(undefined)
 
   const onSubmit: SubmitHandler<UserCredentials> = (data) => {
     console.log(data)
     const getJwtToken = async () => {
-      const response = await axios.request({
-        url: 'http://localhost:8080/auth',
+      const response = await axios.request<UserLoginResponse>({
+        url: 'http://localhost:8080/auth/login',
         method: 'post',
         data: {
-          username: 'satya',
-          password: 'password'
+          username: data.username,
+          password: data.password
         }
 
       });
-      const json = await response.data;
+      const json = response.data;
 
+      const user = {
+        id: json.id,
+        username: json.username,
+        email: json.email,
+        enabled: json.enabled,
+        firstName: json.firstName,
+        lastName: json.lastName,
+      }
 
       Cookies.set('token', json.token, {secure: true});
+      localStorage.setItem("user", JSON.stringify(user));
     }
 
-    getJwtToken();
-    console.log(Cookies.get("token"))
+    getJwtToken().then(() => {
+      if (Cookies.get("token")) {
+        navigate("/books");
+      }
+      console.log(Cookies.get("token"))
+    }).catch(errors => alert("wrong username or password"));
   }
 
   const onInvalid = (errors: any) => console.error(errors, "Here")
@@ -55,7 +73,8 @@ export const LoginForm = () => {
                 Username
               </label>
               <div className="mt-2">
-                <input placeholder={"username"}  {...register("username",)}/>
+                <TextField placeholder={"username"}  {...register("username", {required: true})} required/>
+                {errors.username && <p>{errors.username.message}</p>}
               </div>
             </div>
 
@@ -64,13 +83,12 @@ export const LoginForm = () => {
                 <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                   Password
                 </label>
-                <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-500">
-                  Forgot password?
-                </a>
+
               </div>
               <div className="mt-2">
-                <input placeholder={"password"} {...register("password")}/>
+                <TextField placeholder={"password"} {...register("password", {required: true})} required/>
               </div>
+              {errors.password && <p>{errors.password.message}</p>}
             </div>
 
             <button
@@ -81,11 +99,12 @@ export const LoginForm = () => {
             </button>
           </form>
 
+
           <p className="mt-10 text-center text-sm text-gray-500">
             Not a member?{' '}
-            <a href="/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+            <Link to="/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
               Sign up
-            </a>
+            </Link>
           </p>
         </div>
       </div>

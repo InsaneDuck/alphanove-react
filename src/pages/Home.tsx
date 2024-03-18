@@ -1,13 +1,18 @@
-import React from "react";
-import {Link} from "../components/common/Link";
+import React, {useEffect} from "react";
+import {Outlet, useNavigate} from "react-router-dom";
+import {NavBar} from "../components/common/NavBar";
+
 
 export const Home: React.FC = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate("/books")
+  }, []);
   return (
     <div>
-      <a href="/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
-        Sign up
-      </a>
-      <Link href={"/login"}>Login</Link>
+      <NavBar/>
+      <Outlet/>
     </div>
   );
 };

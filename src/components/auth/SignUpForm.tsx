@@ -1,27 +1,47 @@
 import {SubmitHandler, useForm} from "react-hook-form";
-import {useState} from "react";
 import {TextField} from "../common/TextField";
 import {SignUpUserCredentials} from "../../types/SignUpUserCredentials";
+import axios from "axios";
+import {useState} from "react";
+import {Link} from "react-router-dom";
+
+type SignUpResponse = {
+  success: boolean,
+  userNameConflict: boolean,
+  emailConflict: boolean,
+  message: string
+}
 
 
 export const SignUpForm = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: {errors}
   } = useForm<SignUpUserCredentials>();
-
-  const [login, setLogin] = useState<SignUpUserCredentials | undefined>(undefined)
+  const [signUpResponse, setSignUpResponse] = useState<SignUpResponse>();
 
   const onSubmit: SubmitHandler<SignUpUserCredentials> = (data) => {
-    setLogin({
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      firstName: data.firstName,
-      lastName: data.lastName
-    })
+
+
+    console.log(data)
+    const userSignUp = async () => {
+      const response = await axios.request({
+        url: 'http://localhost:8080/auth/register',
+        method: 'post',
+        data: {
+          "userName": data.username,
+          "password": data.password,
+          "email": data.email,
+          "firstName": data.firstName,
+          "lastName": data.lastName
+        }
+
+      });
+      return await response.data;
+    }
+
+    userSignUp().then(data => alert(JSON.stringify(data))).catch(errors => alert(JSON.stringify(errors.response.data)));
   }
 
   return (
@@ -40,7 +60,8 @@ export const SignUpForm = () => {
                 Username
               </label>
               <div className="mt-2">
-                <TextField placeholder={"username"} {...register("username", {required: true})}/>
+                <TextField placeholder={"username"} {...register("username", {required: true})} required/>
+                {errors.username && <p>{errors.username.message}</p>}
               </div>
             </div>
 
@@ -49,7 +70,8 @@ export const SignUpForm = () => {
                 Email
               </label>
               <div className="mt-2">
-                <TextField placeholder={"email"} {...register("email", {required: true})}/>
+                <TextField placeholder={"email"} {...register("email", {required: true})} required/>
+                {errors.email && <p>{errors.email.message}</p>}
               </div>
             </div>
 
@@ -60,7 +82,8 @@ export const SignUpForm = () => {
                 </label>
               </div>
               <div className="mt-2">
-                <TextField placeholder={"password"} {...register("password", {required: true})}/>
+                <TextField placeholder={"password"} {...register("password", {required: true})} required/>
+                {errors.password && <p>{errors.password.message}</p>}
               </div>
             </div>
 
@@ -69,7 +92,8 @@ export const SignUpForm = () => {
                 First Name
               </label>
               <div className="mt-2">
-                <TextField placeholder={"first name"} {...register("firstName", {required: true})}/>
+                <TextField placeholder={"first name"} {...register("firstName", {required: true})} required/>
+                {errors.firstName && <p>{errors.firstName.message}</p>}
               </div>
             </div>
 
@@ -78,7 +102,8 @@ export const SignUpForm = () => {
                 Last Name
               </label>
               <div className="mt-2">
-                <TextField placeholder={"last name"} {...register("lastName", {required: true})}/>
+                <TextField placeholder={"last name"} {...register("lastName", {required: true})} required/>
+                {errors.lastName && <p>{errors.lastName.message}</p>}
               </div>
             </div>
 
@@ -92,11 +117,12 @@ export const SignUpForm = () => {
             </div>
           </form>
 
+
           <p className="mt-10 text-center text-sm text-gray-500">
             Already a member?{' '}
-            <a href="/login" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+            <Link to="/login" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
               Login
-            </a>
+            </Link>
           </p>
         </div>
       </div>
